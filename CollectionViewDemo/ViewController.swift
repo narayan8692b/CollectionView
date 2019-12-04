@@ -25,20 +25,89 @@ class ViewController: UIViewController{
     
     private let spacing:CGFloat = 5.0
     
+    var activityIndicator = UIActivityIndicatorView(style: UIActivityIndicatorViewStyle.gray)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.center = view.center
+        activityIndicator.startAnimating()
+        
+        
+        
+        checkConnectivity()
+        
+        
+        
+        setupUi()
+        
+        getApiData()
+    }
     
+    
+    func checkConnectivity(){
         if (Reachability.isConnectedToNetwork()){
             print("Internet Connection Available!")
         }else{
+            //For Stop Activity Indicator
             print("Internet Connection not Available!")
             var alert = UIAlertView(title: "No Internet Connection", message: "Make sure your device is connected to the internet.", delegate: nil, cancelButtonTitle: "OK")
             alert.show()
         }
-       
-        
-        setupUi()
     }
+    
+    struct resObj:Codable {
+        let completed:Bool
+        let id:Int
+        let title:String
+        let userId:Int
+    }
+    
+    
+    
+    func getApiData(){
+        guard let url = URL(string: "https://jsonplaceholder.typicode.com/todos") else {return}
+        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            guard let dataResponse = data,
+                error == nil else {
+                    print(error?.localizedDescription ?? "Response Error")
+                    return }
+            
+            do {
+                let decoder = JSONDecoder()
+                let gitData = try decoder.decode(Array<resObj>.self, from: dataResponse)
+                print("================")
+                print(gitData[0].title)
+                
+            } catch let err {
+                print("Err", err)
+                
+            }
+            
+            //            {
+            //                   completed = 0;
+            //                   id = 1;
+            //                   title = "delectus aut autem";
+            //                   userId = 1;
+            //            }
+            
+            do{
+                //here dataResponse received from a network request
+                let jsonResponse = try JSONSerialization.jsonObject(with:
+                    dataResponse, options: [])
+                print(jsonResponse) //Response result
+            } catch let parsingError {
+                print("Error", parsingError)
+            }
+            
+            
+            
+        }
+        task.resume()
+    }
+    
     
     func setupUi(){
         let layout = UICollectionViewFlowLayout()
@@ -70,7 +139,7 @@ class ViewController: UIViewController{
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
     
 }
 
